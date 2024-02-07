@@ -1,4 +1,3 @@
-// Package plugindemo a demo plugin.
 package traefik_api_key_auth
 
 import (
