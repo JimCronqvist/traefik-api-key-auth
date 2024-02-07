@@ -65,7 +65,6 @@ linters:
     - gomnd
     - forbidigo
     - varnamelen
-    - var-naming # Complains about underscore in package name
 
 issues:
   exclude-use-default: false
