@@ -43,5 +43,5 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-${{ matrix.go-version }}-go-
 
-      - name: Test (disabled for now)
-        run: echo go test -v -cover ./...
+      - name: Test
+        run: go test -v -cover ./...

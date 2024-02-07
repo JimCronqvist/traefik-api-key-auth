@@ -25,6 +25,10 @@ linters-settings:
       - FIXME
   gofumpt:
     extra-rules: true
+  revive:
+    rules:
+      - name: var-naming
+        disabled: true
 
 linters:
   enable-all: true
