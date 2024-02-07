@@ -91,7 +91,6 @@ func (aka *ApiKeyAuth) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	if aka.bearerToken {
 		bearerToken := extractBearerToken(req.Header.Get(aka.headerName))
 		if bearerToken != "" && slices.Contains(aka.keys, bearerToken) {
-			// Authorization header contains a valid Bearer token
 			if aka.removeHeaderOnSuccess {
 				req.Header.Del(aka.headerName)
 			}
