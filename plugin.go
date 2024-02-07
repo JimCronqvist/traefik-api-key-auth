@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
-	"slices"
+	//"slices"
 )
 
 // Config the plugin configuration.
@@ -40,6 +40,16 @@ type APIKeyAuth struct {
 	keys                  []string
 	bearerToken           bool
 	removeHeaderOnSuccess bool
+}
+
+// contains checks if a slice contains a given element (Needed until we can use slices.Contains).
+func contains(slice []string, element string) bool {
+	for _, item := range slice {
+		if item == element {
+			return true
+		}
+	}
+	return false
 }
 
 // New created a new APIKeyAuth plugin.
@@ -78,7 +88,7 @@ func extractBearerToken(token string) string {
 func (aka *APIKeyAuth) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	// Check api key header for a valid key, such as x-api-key.
 	if !aka.bearerToken {
-		if slices.Contains(aka.keys, req.Header.Get(aka.headerName)) {
+		if contains(aka.keys, req.Header.Get(aka.headerName)) {
 			if aka.removeHeaderOnSuccess {
 				req.Header.Del(aka.headerName)
 			}
@@ -90,7 +100,7 @@ func (aka *APIKeyAuth) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	// Check api key header for a valid key in the shape of a Bearer token, such as Authorization.
 	if aka.bearerToken {
 		bearerToken := extractBearerToken(req.Header.Get(aka.headerName))
-		if bearerToken != "" && slices.Contains(aka.keys, bearerToken) {
+		if bearerToken != "" && contains(aka.keys, bearerToken) {
 			if aka.removeHeaderOnSuccess {
 				req.Header.Del(aka.headerName)
 			}
