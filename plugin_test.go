@@ -1,5 +1,7 @@
 package traefik_api_key_auth_test
 
+// @todo UPDATE BELOW FROM THE BOILERPLATE DEMO PLUGIN CODE!
+
 import (
 	"context"
 	"net/http"

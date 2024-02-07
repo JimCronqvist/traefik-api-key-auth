@@ -1,65 +1,122 @@
+// Package traefik_api_key_auth Protect your Traefik ingressroutes with API key(s).
 package traefik_api_key_auth
 
 import (
-	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
-	"text/template"
+	"regexp"
+	"slices"
 )
 
 // Config the plugin configuration.
 type Config struct {
-	Headers map[string]string `json:"headers,omitempty"`
+	HeaderName            string   `json:"headerName,omitempty"`
+	BearerToken           bool     `json:"bearerToken,omitempty"`
+	Keys                  []string `json:"keys,omitempty"`
+	RemoveHeaderOnSuccess bool     `json:"removeHeaderOnSuccess,omitempty"`
+}
+
+// Response the response json when no api key match is found
+type Response struct {
+	Message string `json:"message"`
 }
 
 // CreateConfig creates the default plugin configuration.
 func CreateConfig() *Config {
 	return &Config{
-		Headers: make(map[string]string),
+		HeaderName:            "X-API-KEY",
+		Keys:                  make([]string, 0),
+		BearerToken:           true,
+		RemoveHeaderOnSuccess: true,
 	}
 }
 
-// Demo a Demo plugin.
-type Demo struct {
-	next     http.Handler
-	headers  map[string]string
-	name     string
-	template *template.Template
+// ApiKeyAuth a traefik_api_key_auth plugin.
+type ApiKeyAuth struct {
+	next                  http.Handler
+	headerName            string
+	keys                  []string
+	bearerToken           bool
+	removeHeaderOnSuccess bool
 }
 
-// New created a new Demo plugin.
+// New created a new ApiKeyAuth plugin.
 func New(ctx context.Context, next http.Handler, config *Config, name string) (http.Handler, error) {
-	if len(config.Headers) == 0 {
-		return nil, fmt.Errorf("headers cannot be empty")
+	fmt.Printf("Creating plugin: %s instance: %+v, ctx: %+v\n", name, *config, ctx)
+
+	if len(config.Keys) == 0 {
+		return nil, fmt.Errorf("keys cannot be empty. Please specify at least one API Key")
 	}
 
-	return &Demo{
-		headers:  config.Headers,
-		next:     next,
-		name:     name,
-		template: template.New("demo").Delims("[[", "]]"),
+	// If HeaderName is not provided and BearerToken is true, it defaults to "Authorization".
+	if config.HeaderName == "" && config.BearerToken {
+		config.HeaderName = "Authorization"
+	}
+
+	return &ApiKeyAuth{
+		next:                  next,
+		headerName:            config.HeaderName,
+		keys:                  config.Keys,
+		bearerToken:           config.BearerToken,
+		removeHeaderOnSuccess: config.RemoveHeaderOnSuccess,
 	}, nil
+
 }
 
-func (a *Demo) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
-	for key, value := range a.headers {
-		tmpl, err := a.template.Parse(value)
-		if err != nil {
-			http.Error(rw, err.Error(), http.StatusInternalServerError)
+// extractBearerToken Get the Bearer token from the header value
+func extractBearerToken(token string) string {
+	re := regexp.MustCompile(`Bearer\s+([^$]+)`)
+	match := re.FindStringSubmatch(token)
+	if match == nil {
+		return ""
+	}
+	return match[1]
+}
+
+func (aka *ApiKeyAuth) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
+	// Check api key header for a valid key, such as x-api-key
+	if !aka.bearerToken {
+		if slices.Contains(aka.keys, req.Header.Get(aka.headerName)) {
+			if aka.removeHeaderOnSuccess {
+				req.Header.Del(aka.headerName)
+			}
+			aka.next.ServeHTTP(rw, req)
 			return
 		}
-
-		writer := &bytes.Buffer{}
-
-		err = tmpl.Execute(writer, req)
-		if err != nil {
-			http.Error(rw, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		req.Header.Set(key, writer.String())
 	}
 
-	a.next.ServeHTTP(rw, req)
+	// Check api key header for a valid key in the shape of a Bearer token, such as Authorization
+	if aka.bearerToken {
+		bearerToken := extractBearerToken(req.Header.Get(aka.headerName))
+		if bearerToken != "" && slices.Contains(aka.keys, bearerToken) {
+			// Authorization header contains a valid Bearer token
+			if aka.removeHeaderOnSuccess {
+				req.Header.Del(aka.headerName)
+			}
+			aka.next.ServeHTTP(rw, req)
+			return
+		}
+	}
+
+	var response Response
+	errorMessage := "Invalid API Key. Provide an API Key header using %s: %s"
+	if aka.bearerToken {
+		response = Response{
+			Message: fmt.Sprintf(errorMessage, aka.headerName, "Bearer <key>"),
+		}
+	} else {
+		response = Response{
+			Message: fmt.Sprintf(errorMessage, aka.headerName, "<key>"),
+		}
+	}
+	rw.Header().Set("Content-Type", "application/json; charset=utf-8")
+	rw.WriteHeader(http.StatusForbidden)
+
+	// If no headers or invalid key, return 403
+	if err := json.NewEncoder(rw).Encode(response); err != nil {
+		// If response cannot be written, log error
+		fmt.Printf("Error when sending response to an invalid key: %s", err.Error())
+	}
 }
