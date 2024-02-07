@@ -28,7 +28,7 @@ The following declaration (given here in YAML) defines a plugin:
 experimental:
   plugins:
     traefik-api-key-auth:
-      moduleName: github.com/jimcronqvist/traefik-api-key-auth
+      moduleName: github.com/JimCronqvist/traefik-api-key-auth
       version: 0.1.0
 ```
 

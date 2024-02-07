@@ -8,7 +8,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/jimcronqvist/traefik-api-key-auth"
+	"github.com/JimCronqvist/traefik-api-key-auth"
 )
 
 func TestDemo(t *testing.T) {
