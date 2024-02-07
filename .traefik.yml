@@ -1,0 +1,13 @@
+displayName: Traefik API Key Auth
+type: middleware
+#iconPath: .assets/icon.png
+
+import: github.com/jimcronqvist/traefik-api-key-auth
+
+summary: 'Protect your routes with API key(s).'
+
+testData:
+  headerName: x-api-key
+  bearerToken: false
+  keys:
+    - xyz
