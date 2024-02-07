@@ -18,7 +18,7 @@ type Config struct {
 	RemoveHeaderOnSuccess bool     `json:"removeHeaderOnSuccess,omitempty"`
 }
 
-// Response the response json when no api key match is found
+// Response the response json when no api key match is found.
 type Response struct {
 	Message string `json:"message"`
 }
@@ -33,8 +33,8 @@ func CreateConfig() *Config {
 	}
 }
 
-// ApiKeyAuth a traefik_api_key_auth plugin.
-type ApiKeyAuth struct {
+// APIKeyAuth a traefik_api_key_auth plugin.
+type APIKeyAuth struct {
 	next                  http.Handler
 	headerName            string
 	keys                  []string
@@ -42,7 +42,7 @@ type ApiKeyAuth struct {
 	removeHeaderOnSuccess bool
 }
 
-// New created a new ApiKeyAuth plugin.
+// New created a new APIKeyAuth plugin.
 func New(ctx context.Context, next http.Handler, config *Config, name string) (http.Handler, error) {
 	fmt.Printf("Creating plugin: %s instance: %+v, ctx: %+v\n", name, *config, ctx)
 
@@ -55,7 +55,7 @@ func New(ctx context.Context, next http.Handler, config *Config, name string) (h
 		config.HeaderName = "Authorization"
 	}
 
-	return &ApiKeyAuth{
+	return &APIKeyAuth{
 		next:                  next,
 		headerName:            config.HeaderName,
 		keys:                  config.Keys,
@@ -65,7 +65,7 @@ func New(ctx context.Context, next http.Handler, config *Config, name string) (h
 
 }
 
-// extractBearerToken Get the Bearer token from the header value
+// extractBearerToken Get the Bearer token from the header value.
 func extractBearerToken(token string) string {
 	re := regexp.MustCompile(`Bearer\s+([^$]+)`)
 	match := re.FindStringSubmatch(token)
@@ -75,8 +75,8 @@ func extractBearerToken(token string) string {
 	return match[1]
 }
 
-func (aka *ApiKeyAuth) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
-	// Check api key header for a valid key, such as x-api-key
+func (aka *APIKeyAuth) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
+	// Check api key header for a valid key, such as x-api-key.
 	if !aka.bearerToken {
 		if slices.Contains(aka.keys, req.Header.Get(aka.headerName)) {
 			if aka.removeHeaderOnSuccess {
@@ -87,7 +87,7 @@ func (aka *ApiKeyAuth) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	// Check api key header for a valid key in the shape of a Bearer token, such as Authorization
+	// Check api key header for a valid key in the shape of a Bearer token, such as Authorization.
 	if aka.bearerToken {
 		bearerToken := extractBearerToken(req.Header.Get(aka.headerName))
 		if bearerToken != "" && slices.Contains(aka.keys, bearerToken) {
@@ -113,9 +113,9 @@ func (aka *ApiKeyAuth) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	rw.Header().Set("Content-Type", "application/json; charset=utf-8")
 	rw.WriteHeader(http.StatusForbidden)
 
-	// If no headers or invalid key, return 403
+	// If no headers or invalid key, return 403.
 	if err := json.NewEncoder(rw).Encode(response); err != nil {
-		// If response cannot be written, log error
+		// If response cannot be written, log error.
 		fmt.Printf("Error when sending response to an invalid key: %s", err.Error())
 	}
 }
