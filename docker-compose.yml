@@ -1,0 +1,32 @@
+version: "3.7"
+
+services:
+  traefik:
+    image: traefik:2.10
+    ports:
+      - "80:80"
+      - "8080:8080"
+    command:
+      - --api.dashboard=true
+      - --api.insecure=true
+      - --experimental.localPlugins.traefik-api-key-auth.modulename=github.com/JimCronqvist/traefik-api-key-auth
+      #- --experimental.plugins.traefik-api-key-auth.modulename=github.com/JimCronqvist/traefik-api-key-auth
+      #- --experimental.plugins.traefik-api-key-auth.version=v0.0.1
+      - --providers.docker=true
+      - --entrypoints.http.address=:80
+    volumes:
+      - '/var/run/docker.sock:/var/run/docker.sock'
+      #- './:/plugins-local/src/github.com/JimCronqvist/traefik-api-key-auth/'
+      - './.traefik.yml:/plugins-local/src/github.com/JimCronqvist/traefik-api-key-auth/.traefik.yml'
+      - './plugin.go:/plugins-local/src/github.com/JimCronqvist/traefik-api-key-auth/plugin.go'
+    labels:
+      - traefik.enable=true
+      - traefik.http.services.traefik.loadbalancer.server.port=8080
+      - traefik.http.middlewares.test.plugin.traefik-api-key-auth.keys[0]=xyz
+
+  whoami:
+    image: ghcr.io/jimcronqvist/whoami:latest
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.website.rule=PathPrefix(`/`)
+      - traefik.http.routers.website.middlewares=test@docker

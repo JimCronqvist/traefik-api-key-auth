@@ -1,4 +1,4 @@
-displayName: Traefik API Key Auth
+displayName: API Key Auth
 type: middleware
 iconPath: .assets/icon.png
 
