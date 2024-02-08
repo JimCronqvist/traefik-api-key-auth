@@ -123,7 +123,7 @@ func (aka *APIKeyAuth) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		}
 	}
 	rw.Header().Set("Content-Type", "application/json; charset=utf-8")
-	rw.WriteHeader(http.StatusForbidden)
+	rw.WriteHeader(http.StatusUnauthorized)
 
 	// If no headers or invalid key, return 403.
 	if err := json.NewEncoder(rw).Encode(response); err != nil {
