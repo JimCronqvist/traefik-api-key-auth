@@ -1,6 +1,6 @@
 displayName: Traefik API Key Auth
 type: middleware
-#iconPath: .assets/icon.png
+iconPath: .assets/icon.png
 
 import: github.com/JimCronqvist/traefik-api-key-auth
 

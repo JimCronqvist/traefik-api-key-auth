@@ -29,15 +29,15 @@ experimental:
   plugins:
     traefik-api-key-auth:
       moduleName: github.com/JimCronqvist/traefik-api-key-auth
-      version: 0.1.0
+      version: v0.0.1
 ```
 
  
 ```
 # Static configuration - CLI
 
---experimental.plugins.sablier.modulename=github.com/acouvreur/sablier
---experimental.plugins.sablier.version=v1.7.0-beta.2
+--experimental.plugins.traefik-api-key-auth.modulename=github.com/JimCronqvist/traefik-api-key-auth
+--experimental.plugins.traefik-api-key-auth.version=v0.0.1
 ```
 
 
