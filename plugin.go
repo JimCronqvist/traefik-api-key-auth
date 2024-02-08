@@ -26,9 +26,9 @@ type Response struct {
 // CreateConfig creates the default plugin configuration.
 func CreateConfig() *Config {
 	return &Config{
-		HeaderName:            "X-API-KEY",
+		HeaderName:            "",
 		Keys:                  make([]string, 0),
-		BearerToken:           true,
+		BearerToken:           false,
 		RemoveHeaderOnSuccess: true,
 	}
 }
@@ -63,6 +63,8 @@ func New(ctx context.Context, next http.Handler, config *Config, name string) (h
 	// If HeaderName is not provided and BearerToken is true, it defaults to "Authorization".
 	if config.HeaderName == "" && config.BearerToken {
 		config.HeaderName = "Authorization"
+	} else if config.HeaderName == "" {
+		config.HeaderName = "X-Api-Key"
 	}
 
 	return &APIKeyAuth{
@@ -110,7 +112,7 @@ func (aka *APIKeyAuth) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	}
 
 	var response Response
-	errorMessage := "Invalid API Key. Provide an API Key header using %s: %s"
+	errorMessage := "Invalid API Key. Provide a valid API Key using header %s: %s"
 	if aka.bearerToken {
 		response = Response{
 			Message: fmt.Sprintf(errorMessage, aka.headerName, "Bearer <key>"),
